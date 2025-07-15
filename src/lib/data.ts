@@ -2,17 +2,18 @@ import type { User, Chat } from '@/types';
 import { sub, formatDistanceToNow } from 'date-fns';
 
 export const users: User[] = [
-  { id: '1', name: 'Alice', avatar: 'https://placehold.co/100x100.png', online: true, data-ai-hint: "woman portrait" },
-  { id: '2', name: 'Bob', avatar: 'https://placehold.co/100x100.png', online: false, lastSeen: '2 hours ago', data-ai-hint: "man portrait" },
-  { id: '3', name: 'Charlie', avatar: 'https://placehold.co/100x100.png', online: true, data-ai-hint: "person portrait" },
-  { id: '4', name: 'Diana', avatar: 'https://placehold.co/100x100.png', online: false, lastSeen: 'yesterday', data-ai-hint: "woman face" },
-  { id: '5', name: 'Ethan', avatar: 'https://placehold.co/100x100.png', online: true, data-ai-hint: "man face" },
-  { id: '6', name: 'Fiona', avatar: 'https://placehold.co/100x100.png', online: false, lastSeen: '3 days ago', data-ai-hint: "woman smiling" },
+  { id: '1', name: 'Alice', email: 'alice@example.com', avatar: 'https://placehold.co/100x100.png', online: true, "data-ai-hint": "woman portrait" },
+  { id: '2', name: 'Bob', email: 'bob@example.com', avatar: 'https://placehold.co/100x100.png', online: false, lastSeen: '2 hours ago', "data-ai-hint": "man portrait" },
+  { id: '3', name: 'Charlie', email: 'charlie@example.com', avatar: 'https://placehold.co/100x100.png', online: true, "data-ai-hint": "person portrait" },
+  { id: '4', name: 'Diana', email: 'diana@example.com', avatar: 'https://placehold.co/100x100.png', online: false, lastSeen: 'yesterday', "data-ai-hint": "woman face" },
+  { id: '5', name: 'Ethan', email: 'ethan@example.com', avatar: 'https://placehold.co/100x100.png', online: true, "data-ai-hint": "man face" },
+  { id: '6', name: 'Fiona', email: 'fiona@example.com', avatar: 'https://placehold.co/100x100.png', online: false, lastSeen: '3 days ago', "data-ai-hint": "woman smiling" },
 ];
 
 export const loggedInUser: User = {
   id: '0',
   name: 'You',
+  email: 'you@example.com',
   avatar: 'https://placehold.co/100x100.png',
   online: true,
   "data-ai-hint": "user profile"
