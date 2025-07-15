@@ -17,6 +17,7 @@ import {
 import { doc, setDoc, getDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { auth, db, rtdb } from '@/lib/firebase';
 import { ref, set, onValue, serverTimestamp as rtdbServerTimestamp, onDisconnect } from 'firebase/database';
+import { useRouter } from 'next/navigation';
 
 interface AuthContextType {
   user: FirebaseUser | null;
@@ -32,26 +33,20 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
-    const initializeAuth = async () => {
-      // Use session persistence to ensure user logs out when tab is closed
-      await setPersistence(auth, browserSessionPersistence);
-      const unsubscribe = onAuthStateChanged(auth, (user) => {
-        setUser(user);
-        if (user) {
-          setupPresence(user.uid);
-        }
-        setLoading(false);
-      });
-      return unsubscribe;
-    };
+    // We want auth state to persist across sessions.
+    // If you want to log out on browser close, use browserSessionPersistence.
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setUser(user);
+      if (user) {
+        setupPresence(user.uid);
+      }
+      setLoading(false);
+    });
     
-    const unsubscribePromise = initializeAuth();
-
-    return () => {
-      unsubscribePromise.then(unsubscribe => unsubscribe && unsubscribe());
-    };
+    return () => unsubscribe();
   }, []);
 
   const setupPresence = (uid: string) => {
@@ -102,31 +97,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const displayName = name || firebaseUser.displayName || 'New User';
       
       try {
-        // First, update the auth user's profile
         if (name && firebaseUser.displayName !== name) {
           await updateProfile(firebaseUser, { displayName: name });
         }
         
-        // Then, create the firestore document
         await setDoc(userRef, {
           id: uid,
           name: displayName,
           email,
           avatar: photoURL || `https://placehold.co/100x100.png`,
-          online: true, // Set to online on creation
+          online: true,
           lastSeen: serverTimestamp(),
         });
+        
+        // This is a new user, so reload the user object to get the new profile info
+        await firebaseUser.reload();
+        setUser(auth.currentUser);
 
       } catch (error) {
         console.error("Error creating user document: ", error);
         throw error;
       }
+    } else {
+        // If user document exists, just update their online status
+        await updateDoc(userRef, { online: true, lastSeen: serverTimestamp() });
     }
     return userRef;
   };
 
   const login = (email: string, pass: string) => {
-    return signInWithEmailAndPassword(auth, email, pass);
+    return signInWithEmailAndPassword(auth, email, pass).then(async (userCredential) => {
+        if (userCredential.user) {
+            await createUserDocument(userCredential.user);
+        }
+        return userCredential;
+    });
   };
 
   const signup = async (email: string, pass: string, name: string) => {
@@ -153,7 +158,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const userStatusDatabaseRef = ref(rtdb, '/status/' + user.uid);
         set(userStatusDatabaseRef, { state: 'offline', last_changed: rtdbServerTimestamp() });
      }
-    return signOut(auth);
+    return signOut(auth).then(() => {
+        router.push('/');
+    });
   };
 
   const value = {
