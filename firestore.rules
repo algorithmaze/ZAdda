@@ -1,3 +1,4 @@
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -9,20 +10,28 @@ service cloud.firestore {
       allow create, update: if request.auth.uid == userId;
     }
 
-    // A user can only write to their own friends subcollection.
-    // This is managed by the acceptFriendRequest Cloud Function.
+    // A user can only manage their own friends list.
+    // This is primarily written to by the acceptFriendRequest Cloud Function.
     match /users/{userId}/friends/{friendId} {
-      allow read: if request.auth != null && request.auth.uid == userId;
-      allow write: if false; // Disallow direct client writes
+      allow read, write, delete: if request.auth.uid == userId;
     }
 
-    // Users can create requests. They can read/update/delete requests involving them.
+    // Rules for friend requests.
     match /friendRequests/{requestId} {
-       allow read: if request.auth != null && (request.auth.uid == resource.data.fromUserId || request.auth.uid == resource.data.toUserId);
-       allow create: if request.auth.uid == request.resource.data.fromUserId;
-       // Only the sender or receiver can update or delete a request.
-       // We check request.resource.data for the state *before* the change.
-       allow update, delete: if request.auth != null && (request.auth.uid == request.resource.data.fromUserId || request.auth.uid == request.resource.data.toUserId);
+      // CREATE: A user can only create a request from their own user ID.
+      allow create: if request.auth.uid == request.resource.data.fromUserId;
+
+      // READ: Only the sender or receiver can read the request.
+      allow read: if request.auth.uid == resource.data.fromUserId || request.auth.uid == resource.data.toUserId;
+      
+      // UPDATE: 
+      // The receiver can update the status (e.g., to 'accepted' or 'declined').
+      // The sender can update the status if it's currently 'pending' (to cancel it).
+      allow update: if (request.auth.uid == resource.data.toUserId) || 
+                       (request.auth.uid == resource.data.fromUserId && resource.data.status == 'pending');
+
+      // DELETE: No user should be able to delete requests directly for data integrity.
+      allow delete: if false;
     }
     
     // Users can read/write to chats they are a member of.
