@@ -7,7 +7,11 @@ import { useEffect, useState } from "react";
 import type { User, Chat } from "@/types";
 import { collection, onSnapshot, query, where, getDoc, doc, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { Sidebar } from "@/components/chat/sidebar";
+import { BottomNavbar } from "@/components/chat/bottom-navbar";
+import { UserHeader } from "@/components/chat/user-header";
+import { ContactList } from "@/components/chat/contact-list";
+import { FriendList } from "@/components/chat/friend-list";
+import { Phone } from "lucide-react";
 
 export default function ChatLayout({
   children,
@@ -20,6 +24,7 @@ export default function ChatLayout({
   const [users, setUsers] = useState<User[]>([]);
   const [loggedInUser, setLoggedInUser] = useState<User | null>(null);
   const [dataLoading, setDataLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("chats");
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -66,7 +71,6 @@ export default function ChatLayout({
         setUsers(usersData);
       });
 
-
       return () => {
         unsubscribeUser();
         unsubscribeChats();
@@ -77,7 +81,30 @@ export default function ChatLayout({
          setDataLoading(false);
        }
     }
-  }, [user, authLoading, router]);
+  }, [user, authLoading, router, dataLoading]);
+  
+  const renderContent = () => {
+    switch (activeTab) {
+      case "chats":
+        return <ContactList chats={chats} />;
+      case "friends":
+        return <FriendList users={users} />;
+      case "calls":
+        return (
+          <div className="flex-1 flex flex-col items-center justify-center text-center p-4">
+            <div className="p-4 bg-primary/10 rounded-full">
+              <Phone className="w-10 h-10 text-primary" />
+            </div>
+            <h3 className="mt-4 text-lg font-semibold">No Calls Yet</h3>
+            <p className="text-sm text-muted-foreground">Your call history will appear here.</p>
+          </div>
+        );
+      default:
+        return children;
+    }
+  }
+
+  const isChatConversationPage = router.pathname?.includes('/chat/') && router.pathname.length > '/chat/'.length;
 
   if (authLoading || dataLoading || !user || !loggedInUser) {
     return (
@@ -88,11 +115,19 @@ export default function ChatLayout({
   }
 
   return (
-    <div className="flex h-screen w-full">
-      <Sidebar chats={chats} user={loggedInUser} allUsers={users} />
-      <main className="flex-1 h-full flex flex-col">
-        {children}
-      </main>
+    <div className="flex h-screen w-full bg-background md:bg-card">
+      <div className={`flex-1 flex flex-col h-full ${isChatConversationPage ? '' : 'md:max-w-sm md:mx-auto md:border-x'}`}>
+        {!isChatConversationPage && <UserHeader user={loggedInUser} />}
+        <main className="flex-1 h-full flex flex-col overflow-y-auto">
+          {isChatConversationPage ? children : renderContent()}
+        </main>
+        {!isChatConversationPage && <BottomNavbar activeTab={activeTab} onTabChange={setActiveTab} />}
+      </div>
+       {isChatConversationPage && (
+        <div className="hidden md:flex flex-1 flex-col">
+          {children}
+        </div>
+      )}
     </div>
   );
 }

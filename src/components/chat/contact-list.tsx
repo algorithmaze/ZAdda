@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -6,7 +7,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { Chat } from "@/types";
-import { useAuth } from "@/context/auth-context";
 import { formatDistanceToNowStrict } from "date-fns";
 import { Timestamp } from "firebase/firestore";
 
@@ -17,8 +17,6 @@ interface ContactListProps {
 
 export function ContactList({ chats }: ContactListProps) {
   const pathname = usePathname();
-  const { user: loggedInUser } = useAuth();
-
 
   if (chats.length === 0) {
     return (

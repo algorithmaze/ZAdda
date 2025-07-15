@@ -1,3 +1,4 @@
+
 "use client"
 import { ChatHeader } from "@/components/chat/chat-header";
 import { MessageInput } from "@/components/chat/message-input";
@@ -6,6 +7,8 @@ import { useAuth } from "@/context/auth-context";
 import { db } from "@/lib/firebase";
 import type { Chat, User as UserType } from "@/types";
 import { doc, getDoc, onSnapshot } from "firebase/firestore";
+import { ArrowLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export default function ChatConversationPage({ params }: { params: { id: string } }) {
@@ -13,6 +16,7 @@ export default function ChatConversationPage({ params }: { params: { id: string 
   const [chat, setChat] = useState<Chat | null>(null);
   const [loading, setLoading] = useState(true);
   const [otherUser, setOtherUser] = useState<UserType | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     if (!loggedInUser) return;
@@ -23,7 +27,6 @@ export default function ChatConversationPage({ params }: { params: { id: string 
       if (doc.exists()) {
         const chatData = { id: doc.id, ...doc.data() } as Chat;
         
-        // Fetch user details for the other participant
         const otherUserId = chatData.userIds.find(uid => uid !== loggedInUser.uid);
         if (otherUserId) {
           const userDocRef = doc(db, 'users', otherUserId);
@@ -66,7 +69,16 @@ export default function ChatConversationPage({ params }: { params: { id: string 
   
   return (
     <div className="flex-1 flex flex-col h-full bg-card">
-      <ChatHeader user={otherUser} />
+      <div className="flex items-center p-4 border-b bg-card md:hidden">
+          <button onClick={() => router.back()} className="mr-2">
+              <ArrowLeft />
+          </button>
+          <ChatHeader user={otherUser} isMobile={true}/>
+      </div>
+      <div className="hidden md:block">
+        <ChatHeader user={otherUser} />
+      </div>
+
       <MessageList messages={chat.messages} currentUserId={loggedInUser.uid} />
       <MessageInput chatId={chat.id} />
     </div>
