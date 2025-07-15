@@ -89,7 +89,7 @@ export default function ChatLayout({
     } else if (!authLoading) {
       setDataLoading(false);
     }
-  }, [user, authLoading, dataLoading, initialLoadComplete]);
+  }, [user, authLoading, initialLoadComplete]);
 
   useEffect(() => {
     if (!authLoading && !user) {
