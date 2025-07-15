@@ -90,17 +90,21 @@ export function FriendList({ allUsers, currentUser }: FriendListProps) {
     };
 
     const handleRequest = async (request: FriendRequest, newStatus: 'accepted' | 'declined') => {
-        const requestRef = doc(db, "friendRequests", request.id);
         try {
             if (newStatus === 'accepted') {
                 const acceptFriendRequest = httpsCallable(functions, 'acceptFriendRequest');
-                await acceptFriendRequest({ requestId: request.id });
+                const result = await acceptFriendRequest({ requestId: request.id });
 
+                // This is the console comment you requested
+                console.log('Cloud function `acceptFriendRequest` executed successfully:', result.data);
+                
                 toast({
                     title: "Friend Added",
                     description: "You are now friends."
                 });
             } else {
+                // For declining, we just update the status client-side
+                const requestRef = doc(db, "friendRequests", request.id);
                 await updateDoc(requestRef, { status: newStatus });
                 toast({
                     title: "Request Declined",
