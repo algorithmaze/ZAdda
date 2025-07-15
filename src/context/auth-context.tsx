@@ -80,21 +80,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const displayName = name || firebaseUser.displayName || 'New User';
       
       try {
+        // First, update the auth user's profile
+        if (name) {
+          await updateProfile(firebaseUser, { displayName: name });
+        }
+        
+        // Then, create the firestore document
         await setDoc(userRef, {
           id: uid,
           name: displayName,
           email,
           avatar: photoURL || `https://placehold.co/100x100.png`,
-          online: false,
+          online: true, // Set to online on creation
           lastSeen: serverTimestamp(),
         });
-        
-        if (name) {
-          await updateProfile(firebaseUser, { displayName: name });
-        }
 
       } catch (error) {
         console.error("Error creating user document: ", error);
+        throw error;
       }
     }
   };
@@ -139,7 +142,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     loginWithGoogle,
   };
 
-  return <AuthContext.Provider value={value}>{!loading && children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {

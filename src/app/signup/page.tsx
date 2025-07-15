@@ -8,13 +8,13 @@ import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/logo";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 
 export default function SignupPage() {
   const router = useRouter();
-  const { signup, loginWithGoogle } = useAuth();
+  const { user, loading: authLoading, signup, loginWithGoogle } = useAuth();
   const { toast } = useToast();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -22,12 +22,22 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.push('/chat');
+    }
+  }, [user, authLoading, router]);
+
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
       await signup(email, password, name);
-      router.push("/chat");
+      toast({
+        title: "Account Created!",
+        description: "You have successfully signed up. Redirecting to chat...",
+      });
+      // The useEffect above will handle the redirection.
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -55,6 +65,13 @@ export default function SignupPage() {
     }
   }
 
+  if (authLoading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <main className="flex items-center justify-center min-h-screen p-4">
