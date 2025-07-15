@@ -11,7 +11,8 @@ export default function ChatPage() {
         </div>
         <h2 className="text-2xl font-semibold mt-4">Welcome to ZAdda</h2>
         <p className="text-muted-foreground max-w-sm">
-          Select a chat from the sidebar to start messaging. Your conversations are secure and private.
+          Select a chat from the sidebar to start messaging. 
+          Or, find a friend in the 'Friends' tab to start a new conversation.
         </p>
       </div>
     </div>

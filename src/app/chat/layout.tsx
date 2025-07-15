@@ -1,12 +1,13 @@
+
 "use client";
 
-import { Sidebar } from "@/components/chat/sidebar";
 import { useAuth } from "@/context/auth-context";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { User, Chat } from "@/types";
-import { collection, onSnapshot, query, where, getDoc, doc } from "firebase/firestore";
+import { collection, onSnapshot, query, where, getDoc, doc, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { Sidebar } from "@/components/chat/sidebar";
 
 export default function ChatLayout({
   children,
@@ -16,6 +17,7 @@ export default function ChatLayout({
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [chats, setChats] = useState<Chat[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [loggedInUser, setLoggedInUser] = useState<User | null>(null);
   const [dataLoading, setDataLoading] = useState(true);
 
@@ -32,16 +34,11 @@ export default function ChatLayout({
         if (doc.exists()) {
           setLoggedInUser({ id: doc.id, ...doc.data() } as User);
         } else {
-          // This case might happen if the user doc creation failed
-          // Or if the user is authenticated but doesn't have a doc yet.
-          // For now, we'll log out to be safe.
-          // In a real app, you might want a more robust recovery mechanism.
           router.push('/'); 
         }
       });
 
       const chatsQuery = query(collection(db, "chats"), where("userIds", "array-contains", user.uid));
-      
       const unsubscribeChats = onSnapshot(chatsQuery, async (snapshot) => {
         const chatsData = await Promise.all(snapshot.docs.map(async (doc) => {
           const chat = { id: doc.id, ...doc.data() } as Chat;
@@ -57,18 +54,30 @@ export default function ChatLayout({
         }));
         
         setChats(chatsData);
-        setDataLoading(false);
+        if(dataLoading) setDataLoading(false);
       }, (error) => {
         console.error("Error fetching chats: ", error);
-        setDataLoading(false);
+        if(dataLoading) setDataLoading(false);
       });
+      
+      const usersQuery = query(collection(db, "users"), where("id", "!=", user.uid));
+      const unsubscribeUsers = onSnapshot(usersQuery, (snapshot) => {
+        const usersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User));
+        setUsers(usersData);
+      });
+
 
       return () => {
         unsubscribeUser();
         unsubscribeChats();
+        unsubscribeUsers();
       };
+    } else {
+       if (!authLoading) {
+         setDataLoading(false);
+       }
     }
-  }, [user, router]);
+  }, [user, authLoading, router]);
 
   if (authLoading || dataLoading || !user || !loggedInUser) {
     return (
@@ -80,7 +89,7 @@ export default function ChatLayout({
 
   return (
     <div className="flex h-screen w-full">
-      <Sidebar chats={chats} user={loggedInUser} />
+      <Sidebar chats={chats} user={loggedInUser} allUsers={users} />
       <main className="flex-1 h-full flex flex-col">
         {children}
       </main>
