@@ -2,9 +2,9 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { onAuthStateChanged, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, User as FirebaseUser, updateProfile } from 'firebase/auth';
-import { doc, setDoc, getDoc, serverTimestamp, updateDoc, onDisconnect } from 'firebase/firestore';
+import { doc, setDoc, getDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { auth, db, rtdb } from '@/lib/firebase';
-import { ref, set, onValue, serverTimestamp as rtdbServerTimestamp } from 'firebase/database';
+import { ref, set, onValue, serverTimestamp as rtdbServerTimestamp, onDisconnect } from 'firebase/database';
 
 interface AuthContextType {
   user: FirebaseUser | null;
@@ -59,12 +59,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const connectedRef = ref(rtdb, '.info/connected');
     onValue(connectedRef, (snap) => {
         if (snap.val() === true) {
-            set(userStatusDatabaseRef, isOnlineForRTDB);
-            updateDoc(userStatusFirestoreRef, isOnlineForFirestore);
-
-            onDisconnect(userStatusDatabaseRef).set(isOfflineForRTDB).then(() => {
+            const disconnectRef = onDisconnect(userStatusDatabaseRef);
+            disconnectRef.set(isOfflineForRTDB).then(() => {
                  updateDoc(userStatusFirestoreRef, isOfflineForFirestore);
             });
+            
+            set(userStatusDatabaseRef, isOnlineForRTDB);
+            updateDoc(userStatusFirestoreRef, isOnlineForFirestore);
         }
     });
   }
