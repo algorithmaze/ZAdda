@@ -82,6 +82,13 @@ export default function ChatLayout({
       setDataLoading(false);
     }
   }, [user, authLoading, dataLoading]);
+
+  useEffect(() => {
+    // This effect handles redirection after the initial loading is done.
+    if (!authLoading && !dataLoading && !user) {
+      router.push("/");
+    }
+  }, [authLoading, dataLoading, user, router]);
   
   const renderContent = () => {
     switch (activeTab) {
@@ -106,7 +113,7 @@ export default function ChatLayout({
 
   const isChatConversationPage = pathname.startsWith('/chat/') && pathname.length > '/chat/'.length;
 
-  if (authLoading || dataLoading) {
+  if (authLoading || dataLoading || !loggedInUser) {
     return (
         <div className="flex h-screen w-full items-center justify-center">
             <p>Loading your ZAdda experience...</p>
@@ -114,8 +121,7 @@ export default function ChatLayout({
     )
   }
   
-  if (!user || !loggedInUser) {
-     router.push("/");
+  if (!user) {
      return (
         <div className="flex h-screen w-full items-center justify-center">
             <p>Redirecting to login...</p>
