@@ -62,7 +62,7 @@ export default function LoginPage() {
             <Logo />
           </div>
           <CardTitle className="text-2xl">Welcome Lowkey</CardTitle>
-          <CardDescription>Sign in to continue to ZAdda</CardDescription>
+          <CardDescription>Chat with your Lowkey</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
