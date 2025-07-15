@@ -2,16 +2,17 @@
 import { ChatHeader } from "@/components/chat/chat-header";
 import { MessageInput } from "@/components/chat/message-input";
 import { MessageList } from "@/components/chat/message-list";
-import { getChatById, loggedInUser } from "@/lib/data";
+import { getChatById } from "@/lib/data";
 import { useEffect, useState } from "react";
 import type { Chat } from "@/types";
+import { useAuth } from "@/context/auth-context";
 
 export default function ChatConversationPage({ params }: { params: { id: string } }) {
-  // This will be replaced with a real data fetch from Firebase.
+  const { user: loggedInUser } = useAuth();
   const [chat, setChat] = useState<Chat | undefined>(undefined);
 
   useEffect(() => {
-    // Simulating a fetch
+    // Simulating a fetch. Will be replaced with firestore fetch.
     const fetchedChat = getChatById(params.id);
     setChat(fetchedChat);
   }, [params.id]);
@@ -25,7 +26,7 @@ export default function ChatConversationPage({ params }: { params: { id: string 
     );
   }
 
-  const otherUser = chat.users.find(u => u.id !== loggedInUser.id);
+  const otherUser = chat.users.find(u => u.id !== loggedInUser.uid);
 
   if (!otherUser) {
     return (
@@ -38,7 +39,7 @@ export default function ChatConversationPage({ params }: { params: { id: string 
   return (
     <div className="flex-1 flex flex-col h-full bg-card">
       <ChatHeader user={otherUser} />
-      <MessageList messages={chat.messages} currentUserId={loggedInUser.id} />
+      <MessageList messages={chat.messages} currentUserId={loggedInUser.uid} />
       <MessageInput />
     </div>
   );
