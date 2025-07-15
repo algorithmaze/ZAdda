@@ -22,15 +22,18 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.push("/chat");
+    }
+  }, [authLoading, user, router]);
+
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
       await login(email, password);
-      toast({
-        title: "Login Successful",
-        description: "Redirecting to your chats...",
-      });
       router.push("/chat");
     } catch (error: any) {
       toast({
@@ -47,10 +50,6 @@ export default function LoginPage() {
     setGoogleLoading(true);
     try {
       await loginWithGoogle();
-       toast({
-        title: "Google Sign-In Successful",
-        description: "Redirecting to your chats...",
-      });
       router.push("/chat");
     } catch (error: any) {
        toast({
@@ -63,7 +62,7 @@ export default function LoginPage() {
     }
   }
 
-  if (authLoading) {
+  if (authLoading || user) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />

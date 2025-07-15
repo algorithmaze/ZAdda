@@ -2,10 +2,10 @@
 "use client";
 
 import { useAuth } from "@/context/auth-context";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { User, Chat } from "@/types";
-import { collection, onSnapshot, query, where, getDoc, doc, getDocs } from "firebase/firestore";
+import { collection, onSnapshot, query, where, getDoc, doc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { BottomNavbar } from "@/components/chat/bottom-navbar";
 import { UserHeader } from "@/components/chat/user-header";
@@ -20,6 +20,7 @@ export default function ChatLayout({
 }) {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const [chats, setChats] = useState<Chat[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [loggedInUser, setLoggedInUser] = useState<User | null>(null);
@@ -39,7 +40,8 @@ export default function ChatLayout({
         if (doc.exists()) {
           setLoggedInUser({ id: doc.id, ...doc.data() } as User);
         } else {
-          router.push('/'); 
+          // User doc might not be created yet, handle gracefully
+          console.log("User document not found, might be a new user.");
         }
       });
 
@@ -59,10 +61,10 @@ export default function ChatLayout({
         }));
         
         setChats(chatsData);
-        if(dataLoading) setDataLoading(false);
+        if (dataLoading) setDataLoading(false);
       }, (error) => {
         console.error("Error fetching chats: ", error);
-        if(dataLoading) setDataLoading(false);
+        if (dataLoading) setDataLoading(false);
       });
       
       const usersQuery = query(collection(db, "users"), where("id", "!=", user.uid));
@@ -76,12 +78,10 @@ export default function ChatLayout({
         unsubscribeChats();
         unsubscribeUsers();
       };
-    } else {
-       if (!authLoading) {
-         setDataLoading(false);
-       }
+    } else if (!authLoading) {
+      setDataLoading(false);
     }
-  }, [user, authLoading, router, dataLoading]);
+  }, [user, authLoading, dataLoading]);
   
   const renderContent = () => {
     switch (activeTab) {
@@ -104,30 +104,37 @@ export default function ChatLayout({
     }
   }
 
-  const isChatConversationPage = router.pathname?.includes('/chat/') && router.pathname.length > '/chat/'.length;
+  const isChatConversationPage = pathname.startsWith('/chat/') && pathname.length > '/chat/'.length;
 
-  if (authLoading || dataLoading || !user || !loggedInUser) {
+  if (authLoading || dataLoading) {
     return (
         <div className="flex h-screen w-full items-center justify-center">
             <p>Loading your ZAdda experience...</p>
         </div>
     )
   }
+  
+  if (!user || !loggedInUser) {
+     router.push("/");
+     return (
+        <div className="flex h-screen w-full items-center justify-center">
+            <p>Redirecting to login...</p>
+        </div>
+     );
+  }
 
   return (
     <div className="flex h-screen w-full bg-background md:bg-card">
-      <div className={`flex-1 flex flex-col h-full ${isChatConversationPage ? '' : 'md:max-w-sm md:mx-auto md:border-x'}`}>
-        {!isChatConversationPage && <UserHeader user={loggedInUser} />}
+      <div className={`flex-1 flex flex-col h-full ${isChatConversationPage ? 'hidden' : 'flex'} md:max-w-sm md:flex md:mx-auto md:border-x`}>
+        <UserHeader user={loggedInUser} />
         <main className="flex-1 h-full flex flex-col overflow-y-auto">
-          {isChatConversationPage ? children : renderContent()}
+          {renderContent()}
         </main>
-        {!isChatConversationPage && <BottomNavbar activeTab={activeTab} onTabChange={setActiveTab} />}
+        <BottomNavbar activeTab={activeTab} onTabChange={setActiveTab} />
       </div>
-       {isChatConversationPage && (
-        <div className="hidden md:flex flex-1 flex-col">
+      <div className={`${isChatConversationPage ? 'flex' : 'hidden'} md:flex flex-1 flex-col`}>
           {children}
-        </div>
-      )}
+      </div>
     </div>
   );
 }
