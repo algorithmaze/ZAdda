@@ -61,7 +61,7 @@ export default function LoginPage() {
           <div className="flex justify-center mb-4">
             <Logo />
           </div>
-          <CardTitle className="text-2xl">Welcome Back!</CardTitle>
+          <CardTitle className="text-2xl">Welcome Lowkey</CardTitle>
           <CardDescription>Sign in to continue to ZAdda</CardDescription>
         </CardHeader>
         <CardContent>
