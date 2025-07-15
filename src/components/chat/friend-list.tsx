@@ -8,11 +8,12 @@ import { Button } from "../ui/button";
 import { Plus, UserCheck, UserX, Clock, Search } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import { collection, addDoc, serverTimestamp, query, where, getDocs, doc, setDoc, onSnapshot, updateDoc, writeBatch } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { db, functions } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
+import { httpsCallable } from 'firebase/functions';
 
 interface FriendListProps {
     allUsers: User[];
@@ -92,13 +93,8 @@ export function FriendList({ allUsers, currentUser }: FriendListProps) {
         const requestRef = doc(db, "friendRequests", request.id);
         try {
             if (newStatus === 'accepted') {
-                const batch = writeBatch(db);
-                // Update request status
-                batch.update(requestRef, { status: newStatus });
-                // Add friend for both users
-                batch.set(doc(db, `users/${request.fromUserId}/friends/${request.toUserId}`), { friendSince: serverTimestamp() });
-                batch.set(doc(db, `users/${request.toUserId}/friends/${request.fromUserId}`), { friendSince: serverTimestamp() });
-                await batch.commit();
+                const acceptFriendRequest = httpsCallable(functions, 'acceptFriendRequest');
+                await acceptFriendRequest({ requestId: request.id });
 
                 toast({
                     title: "Friend Added",
@@ -111,12 +107,12 @@ export function FriendList({ allUsers, currentUser }: FriendListProps) {
                     description: "You have declined the friend request."
                 });
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error handling request:", error);
             toast({
                 variant: "destructive",
                 title: "Error",
-                description: "Could not process the request. Please try again."
+                description: error.message || "Could not process the request. Please try again."
             });
         }
     };
