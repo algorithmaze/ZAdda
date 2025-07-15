@@ -1,6 +1,5 @@
 import { cn } from "@/lib/utils";
 import type { Message } from "@/types";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { File, Image as ImageIcon, Download } from "lucide-react";
 import Image from "next/image";
 
@@ -46,7 +45,7 @@ export function MessageBubble({ message, isSentByCurrentUser, className, ...prop
         )
       case 'text':
       default:
-        return <p className="p-3">{message.text}</p>;
+        return <p className="p-3 whitespace-pre-wrap">{message.text}</p>;
     }
   }
 

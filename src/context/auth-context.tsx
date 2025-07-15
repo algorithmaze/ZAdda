@@ -2,9 +2,9 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { onAuthStateChanged, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, User as FirebaseUser, updateProfile } from 'firebase/auth';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
-import { auth, db } from '@/lib/firebase';
-import type { User } from '@/types';
+import { doc, setDoc, getDoc, serverTimestamp, updateDoc, onDisconnect } from 'firebase/firestore';
+import { auth, db, rtdb } from '@/lib/firebase';
+import { ref, set, onValue, serverTimestamp as rtdbServerTimestamp } from 'firebase/database';
 
 interface AuthContextType {
   user: FirebaseUser | null;
@@ -24,10 +24,51 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
+      if (user) {
+        setupPresence(user.uid);
+      }
       setLoading(false);
     });
     return () => unsubscribe();
   }, []);
+
+  const setupPresence = (uid: string) => {
+    const userStatusDatabaseRef = ref(rtdb, '/status/' + uid);
+    const userStatusFirestoreRef = doc(db, '/users/' + uid);
+
+    const isOfflineForRTDB = {
+        state: 'offline',
+        last_changed: rtdbServerTimestamp(),
+    };
+
+    const isOnlineForRTDB = {
+        state: 'online',
+        last_changed: rtdbServerTimestamp(),
+    };
+    
+    const isOfflineForFirestore = {
+        online: false,
+        lastSeen: serverTimestamp(),
+    };
+
+    const isOnlineForFirestore = {
+        online: true,
+        lastSeen: serverTimestamp(),
+    };
+
+    const connectedRef = ref(rtdb, '.info/connected');
+    onValue(connectedRef, (snap) => {
+        if (snap.val() === true) {
+            set(userStatusDatabaseRef, isOnlineForRTDB);
+            updateDoc(userStatusFirestoreRef, isOnlineForFirestore);
+
+            onDisconnect(userStatusDatabaseRef).set(isOfflineForRTDB).then(() => {
+                 updateDoc(userStatusFirestoreRef, isOfflineForFirestore);
+            });
+        }
+    });
+  }
+
 
   const createUserDocument = async (firebaseUser: FirebaseUser, name?: string) => {
     const userRef = doc(db, 'users', firebaseUser.uid);
@@ -44,9 +85,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           email,
           avatar: photoURL || `https://placehold.co/100x100.png`,
           online: false,
+          lastSeen: serverTimestamp(),
         });
         
-        // Also update the auth profile if a new name was provided during signup
         if (name) {
           await updateProfile(firebaseUser, { displayName: name });
         }
@@ -79,6 +120,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
+     if(user) {
+        const userStatusFirestoreRef = doc(db, '/users/' + user.uid);
+        updateDoc(userStatusFirestoreRef, { online: false, lastSeen: serverTimestamp() });
+        const userStatusDatabaseRef = ref(rtdb, '/status/' + user.uid);
+        set(userStatusDatabaseRef, { state: 'offline', last_changed: rtdbServerTimestamp() });
+     }
     return signOut(auth);
   };
 

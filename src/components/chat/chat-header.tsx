@@ -1,5 +1,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { formatDistanceToNowStrict } from "date-fns";
 import { Phone, Video } from "lucide-react";
 import type { User } from "@/types";
 
@@ -8,6 +9,10 @@ interface ChatHeaderProps {
 }
 
 export function ChatHeader({ user }: ChatHeaderProps) {
+  const getLastSeen = () => {
+    if(!user.lastSeen) return "a long time ago";
+    return formatDistanceToNowStrict(user.lastSeen.toDate(), { addSuffix: true })
+  }
   return (
     <div className="flex items-center justify-between p-4 border-b bg-card">
       <div className="flex items-center gap-4">
@@ -18,7 +23,7 @@ export function ChatHeader({ user }: ChatHeaderProps) {
         <div>
           <h3 className="font-semibold text-lg">{user.name}</h3>
           <p className="text-sm text-muted-foreground">
-            {user.online ? "Online" : `Last seen ${user.lastSeen}`}
+            {user.online ? "Online" : `Last seen ${getLastSeen()}`}
           </p>
         </div>
       </div>

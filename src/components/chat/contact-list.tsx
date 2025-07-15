@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { Chat } from "@/types";
 import { useAuth } from "@/context/auth-context";
+import { formatDistanceToNowStrict } from "date-fns";
+import { Timestamp } from "firebase/firestore";
 
 
 interface ContactListProps {
@@ -21,19 +23,24 @@ export function ContactList({ chats }: ContactListProps) {
   if (chats.length === 0) {
     return (
       <div className="p-4 text-center text-sm text-muted-foreground">
-        No chats found.
+        No chats found. Start a new conversation!
       </div>
     );
+  }
+  
+  const getTimestampString = (timestamp: Timestamp | undefined) => {
+    if (!timestamp) return '';
+    return formatDistanceToNowStrict(timestamp.toDate(), { addSuffix: true });
   }
 
   return (
     <nav className="p-2 space-y-1">
       {chats.map((chat) => {
-        const otherUser = chat.users.find((u) => u.id !== loggedInUser?.uid);
+        const otherUser = chat.otherUser;
         const isActive = pathname === `/chat/${chat.id}`;
         if (!otherUser) return null;
 
-        const lastMessage = chat.messages[chat.messages.length - 1];
+        const lastMessage = chat.messages?.[chat.messages.length - 1];
 
         return (
           <Link
@@ -58,7 +65,7 @@ export function ContactList({ chats }: ContactListProps) {
               <p className="text-sm text-muted-foreground truncate">{lastMessage?.text || "No messages yet"}</p>
             </div>
             <div className="flex flex-col items-end text-xs text-muted-foreground space-y-1">
-              <span>{lastMessage?.timestamp}</span>
+              <span>{getTimestampString(lastMessage?.timestamp)}</span>
               {chat.unreadCount > 0 && (
                 <Badge variant="default" className="w-5 h-5 flex items-center justify-center p-0">
                   {chat.unreadCount}

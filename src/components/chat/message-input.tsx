@@ -2,10 +2,21 @@
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { useAuth } from "@/context/auth-context";
+import { db } from "@/lib/firebase";
 import { Paperclip, Send } from "lucide-react";
+import { arrayUnion, doc, serverTimestamp, updateDoc } from "firebase/firestore";
 import React from "react";
+import { useToast } from "@/hooks/use-toast";
+import { v4 as uuidv4 } from 'uuid';
 
-export function MessageInput() {
+interface MessageInputProps {
+  chatId: string;
+}
+
+export function MessageInput({ chatId }: MessageInputProps) {
+  const { user } = useAuth();
+  const { toast } = useToast();
   const [message, setMessage] = React.useState("");
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
   
@@ -18,13 +29,32 @@ export function MessageInput() {
     }
   };
   
-  const handleSend = (e: React.FormEvent) => {
+  const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (message.trim()) {
-      console.log("Sending message:", message);
-      setMessage("");
-       if (textareaRef.current) {
-        textareaRef.current.style.height = "auto";
+    if (message.trim() && user) {
+      const chatRef = doc(db, "chats", chatId);
+      try {
+        await updateDoc(chatRef, {
+          messages: arrayUnion({
+            id: uuidv4(),
+            text: message.trim(),
+            senderId: user.uid,
+            timestamp: serverTimestamp(),
+            type: 'text'
+          })
+        });
+
+        setMessage("");
+        if (textareaRef.current) {
+          textareaRef.current.style.height = "auto";
+        }
+      } catch (error) {
+        console.error("Error sending message: ", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Could not send your message. Please try again."
+        })
       }
     }
   };

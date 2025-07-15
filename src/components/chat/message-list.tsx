@@ -1,7 +1,10 @@
+"use client"
+
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { Message } from "@/types";
 import { MessageBubble } from "./message-bubble";
 import { TypingIndicator } from "./typing-indicator";
+import React, { useEffect, useRef } from "react";
 
 interface MessageListProps {
   messages: Message[];
@@ -9,8 +12,16 @@ interface MessageListProps {
 }
 
 export function MessageList({ messages, currentUserId }: MessageListProps) {
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollAreaRef.current) {
+      scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
+    }
+  }, [messages]);
+
   return (
-    <ScrollArea className="flex-1">
+    <ScrollArea className="flex-1" ref={scrollAreaRef}>
       <div className="p-4 md:p-6 space-y-4">
         {messages.map((message, index) => (
           <MessageBubble 
@@ -21,7 +32,7 @@ export function MessageList({ messages, currentUserId }: MessageListProps) {
             style={{ animationDelay: `${index * 50}ms` }}
           />
         ))}
-        <TypingIndicator />
+        {/* <TypingIndicator /> */}
       </div>
     </ScrollArea>
   );
