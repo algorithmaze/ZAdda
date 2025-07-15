@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -22,6 +23,12 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.push("/chat");
+    }
+  }, [user, authLoading, router]);
+
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -29,17 +36,9 @@ export default function SignupPage() {
       await signup(email, password, name);
       toast({
         title: "Account Created!",
-        description: (
-          <p>
-            You have successfully signed up. Please{" "}
-            <Link href="/" className="font-bold underline">
-              Sign In
-            </Link>
-            .
-          </p>
-        ),
+        description: "You have successfully signed up. Redirecting...",
       });
-      // Intentionally not redirecting to allow user to navigate manually
+      router.push("/chat");
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -57,8 +56,9 @@ export default function SignupPage() {
       await loginWithGoogle();
       toast({
         title: "Account Created!",
-        description: "You have successfully signed up with Google.",
+        description: "You have successfully signed up with Google. Redirecting...",
       });
+      router.push("/chat");
     } catch (error: any) {
        toast({
         variant: "destructive",
@@ -70,10 +70,11 @@ export default function SignupPage() {
     }
   }
 
-  if (authLoading) {
+  if (authLoading || user) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
+        <p className="ml-2">Loading...</p>
       </div>
     );
   }

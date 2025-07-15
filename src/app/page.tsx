@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -8,18 +9,24 @@ import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/logo";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, loginWithGoogle } = useAuth();
+  const { user, loading: authLoading, login, loginWithGoogle } = useAuth();
   const { toast } = useToast();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.push("/chat");
+    }
+  }, [user, authLoading, router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,8 +35,9 @@ export default function LoginPage() {
       await login(email, password);
       toast({
         title: "Login Successful",
-        description: "You are now logged in.",
+        description: "Redirecting to your chats...",
       });
+      router.push("/chat");
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -47,8 +55,9 @@ export default function LoginPage() {
       await loginWithGoogle();
        toast({
         title: "Google Sign-In Successful",
-        description: "You are now logged in.",
+        description: "Redirecting to your chats...",
       });
+      router.push("/chat");
     } catch (error: any) {
        toast({
         variant: "destructive",
@@ -60,6 +69,15 @@ export default function LoginPage() {
     }
   }
 
+  if (authLoading || user) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <p className="ml-2">Loading...</p>
+      </div>
+    );
+  }
+
   return (
     <main className="flex items-center justify-center min-h-screen p-4">
       <Card className="w-full max-w-md glassmorphism">
@@ -67,8 +85,8 @@ export default function LoginPage() {
           <div className="flex justify-center mb-4">
             <Logo />
           </div>
-          <CardTitle className="text-2xl">Welcome Lowkey</CardTitle>
-          <CardDescription>Chat with your Lowkey</CardDescription>
+          <CardTitle className="text-2xl">Welcome Back</CardTitle>
+          <CardDescription>Sign in to continue to ZAdda</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
