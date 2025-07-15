@@ -22,12 +22,6 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
-  useEffect(() => {
-    if (!authLoading && user) {
-      router.push('/chat');
-    }
-  }, [user, authLoading, router]);
-
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -35,9 +29,9 @@ export default function SignupPage() {
       await signup(email, password, name);
       toast({
         title: "Account Created!",
-        description: "You have successfully signed up. Redirecting to chat...",
+        description: "You have successfully signed up.",
       });
-      // The useEffect above will handle the redirection.
+      // Intentionally not redirecting to allow user to navigate manually
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -53,7 +47,10 @@ export default function SignupPage() {
     setGoogleLoading(true);
     try {
       await loginWithGoogle();
-      router.push("/chat");
+      toast({
+        title: "Account Created!",
+        description: "You have successfully signed up with Google.",
+      });
     } catch (error: any) {
        toast({
         variant: "destructive",

@@ -26,7 +26,10 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await login(email, password);
-      router.push("/chat");
+      toast({
+        title: "Login Successful",
+        description: "You are now logged in.",
+      });
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -42,7 +45,10 @@ export default function LoginPage() {
     setGoogleLoading(true);
     try {
       await loginWithGoogle();
-      router.push("/chat");
+       toast({
+        title: "Google Sign-In Successful",
+        description: "You are now logged in.",
+      });
     } catch (error: any) {
        toast({
         variant: "destructive",
