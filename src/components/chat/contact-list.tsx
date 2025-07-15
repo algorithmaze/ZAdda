@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { Chat } from "@/types";
+import { loggedInUser } from "@/lib/data";
 
 interface ContactListProps {
   chats: Chat[];
@@ -14,10 +15,18 @@ interface ContactListProps {
 export function ContactList({ chats }: ContactListProps) {
   const pathname = usePathname();
 
+  if (chats.length === 0) {
+    return (
+      <div className="p-4 text-center text-sm text-muted-foreground">
+        No chats found.
+      </div>
+    );
+  }
+
   return (
     <nav className="p-2 space-y-1">
       {chats.map((chat) => {
-        const otherUser = chat.users.find((u) => u.id !== '0');
+        const otherUser = chat.users.find((u) => u.id !== loggedInUser?.id);
         const isActive = pathname === `/chat/${chat.id}`;
         if (!otherUser) return null;
 

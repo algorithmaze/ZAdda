@@ -1,15 +1,26 @@
+"use client"
 import { ChatHeader } from "@/components/chat/chat-header";
 import { MessageInput } from "@/components/chat/message-input";
 import { MessageList } from "@/components/chat/message-list";
 import { getChatById, loggedInUser } from "@/lib/data";
+import { useEffect, useState } from "react";
+import type { Chat } from "@/types";
 
 export default function ChatConversationPage({ params }: { params: { id: string } }) {
-  const chat = getChatById(params.id);
+  // This will be replaced with a real data fetch from Firebase.
+  const [chat, setChat] = useState<Chat | undefined>(undefined);
 
-  if (!chat) {
+  useEffect(() => {
+    // Simulating a fetch
+    const fetchedChat = getChatById(params.id);
+    setChat(fetchedChat);
+  }, [params.id]);
+
+
+  if (!chat || !loggedInUser) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <p>Chat not found.</p>
+        <p>Loading chat...</p>
       </div>
     );
   }

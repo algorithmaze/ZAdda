@@ -5,6 +5,7 @@ export type User = {
   avatar: string;
   online: boolean;
   lastSeen?: string;
+  'data-ai-hint'?: string;
 };
 
 export type Message = {
@@ -15,6 +16,7 @@ export type Message = {
   type: 'text' | 'image' | 'file';
   fileUrl?: string;
   fileName?: string;
+  'data-ai-hint'?: string;
 };
 
 export type Chat = {

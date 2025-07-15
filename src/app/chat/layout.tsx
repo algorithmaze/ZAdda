@@ -6,6 +6,17 @@ export default function ChatLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // In a real app, you would fetch this data from your backend/Firebase
+  // and handle loading/error states.
+  if (!loggedInUser) {
+    // Or redirect to login, show a loading spinner, etc.
+    return (
+        <div className="flex h-screen w-full items-center justify-center">
+            <p>Loading user data...</p>
+        </div>
+    )
+  }
+
   return (
     <div className="flex h-screen w-full">
       <Sidebar chats={chats} user={loggedInUser} />
