@@ -7,13 +7,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Button } from "../ui/button";
 import { Plus, UserCheck, UserX, Clock, Search } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
-import { collection, addDoc, serverTimestamp, query, where, getDocs, doc, setDoc, onSnapshot, updateDoc, deleteDoc, getDoc, writeBatch } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp, query, where, getDocs, doc, setDoc, onSnapshot, updateDoc, writeBatch } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
 
 interface FriendListProps {
     allUsers: User[];
@@ -200,7 +199,7 @@ export function FriendList({ allUsers, currentUser }: FriendListProps) {
 
     const renderUserItem = (user: User, context: 'friend' | 'request' | 'add', request?: FriendRequest) => (
         <div key={user.id} className="flex items-center justify-between p-3 rounded-lg transition-colors hover:bg-primary/5">
-            <div className="flex items-center gap-3" onClick={() => context === 'friend' && startChat(user)}>
+            <div className="flex items-center gap-3 cursor-pointer" onClick={() => context === 'friend' && startChat(user)}>
                 <Avatar className="w-12 h-12">
                     <AvatarImage src={user.avatar} alt={user.name} />
                     <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>

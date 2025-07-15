@@ -89,7 +89,7 @@ export default function ChatLayout({
     } else if (!authLoading) {
       setDataLoading(false);
     }
-  }, [user, authLoading, initialLoadComplete]);
+  }, [user, authLoading, initialLoadComplete, dataLoading]);
 
   const renderContent = () => {
     switch (activeTab) {
