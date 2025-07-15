@@ -5,7 +5,7 @@ import { useAuth } from "@/context/auth-context";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { User, Chat } from "@/types";
-import { collection, onSnapshot, query, where, getDocs, doc, getDoc } from "firebase/firestore";
+import { collection, onSnapshot, query, where, getDoc, doc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 export default function ChatLayout({
@@ -13,24 +13,30 @@ export default function ChatLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { user, loading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [chats, setChats] = useState<Chat[]>([]);
   const [loggedInUser, setLoggedInUser] = useState<User | null>(null);
   const [dataLoading, setDataLoading] = useState(true);
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!authLoading && !user) {
       router.push("/");
     }
-  }, [user, loading, router]);
+  }, [user, authLoading, router]);
 
   useEffect(() => {
     if (user) {
       const userDocRef = doc(db, 'users', user.uid);
       const unsubscribeUser = onSnapshot(userDocRef, (doc) => {
-        if(doc.exists()){
-            setLoggedInUser({ id: doc.id, ...doc.data() } as User);
+        if (doc.exists()) {
+          setLoggedInUser({ id: doc.id, ...doc.data() } as User);
+        } else {
+          // This case might happen if the user doc creation failed
+          // Or if the user is authenticated but doesn't have a doc yet.
+          // For now, we'll log out to be safe.
+          // In a real app, you might want a more robust recovery mechanism.
+          router.push('/'); 
         }
       });
 
@@ -39,32 +45,32 @@ export default function ChatLayout({
       const unsubscribeChats = onSnapshot(chatsQuery, async (snapshot) => {
         const chatsData = await Promise.all(snapshot.docs.map(async (doc) => {
           const chat = { id: doc.id, ...doc.data() } as Chat;
-
-          // Fetch other user's data
           const otherUserId = chat.userIds.find(uid => uid !== user.uid);
           if (otherUserId) {
             const userDocRef = doc(db, 'users', otherUserId);
             const userDoc = await getDoc(userDocRef);
-            if(userDoc.exists()) {
-                chat.otherUser = { id: userDoc.id, ...userDoc.data() } as User;
+            if (userDoc.exists()) {
+              chat.otherUser = { id: userDoc.id, ...userDoc.data() } as User;
             }
           }
-          
           return chat;
         }));
         
         setChats(chatsData);
         setDataLoading(false);
+      }, (error) => {
+        console.error("Error fetching chats: ", error);
+        setDataLoading(false);
       });
 
       return () => {
-          unsubscribeUser();
-          unsubscribeChats();
+        unsubscribeUser();
+        unsubscribeChats();
       };
     }
-  }, [user]);
+  }, [user, router]);
 
-  if (loading || dataLoading || !user || !loggedInUser) {
+  if (authLoading || dataLoading || !user || !loggedInUser) {
     return (
         <div className="flex h-screen w-full items-center justify-center">
             <p>Loading your ZAdda experience...</p>
