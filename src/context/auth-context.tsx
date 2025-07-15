@@ -1,7 +1,18 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { onAuthStateChanged, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, User as FirebaseUser, updateProfile } from 'firebase/auth';
+import { 
+  onAuthStateChanged, 
+  signOut, 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword, 
+  GoogleAuthProvider, 
+  signInWithPopup, 
+  User as FirebaseUser, 
+  updateProfile,
+  setPersistence,
+  browserSessionPersistence
+} from 'firebase/auth';
 import { doc, setDoc, getDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { auth, db, rtdb } from '@/lib/firebase';
 import { ref, set, onValue, serverTimestamp as rtdbServerTimestamp, onDisconnect } from 'firebase/database';
@@ -22,14 +33,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
-      if (user) {
-        setupPresence(user.uid);
-      }
-      setLoading(false);
-    });
-    return () => unsubscribe();
+    const initializeAuth = async () => {
+      await setPersistence(auth, browserSessionPersistence);
+      const unsubscribe = onAuthStateChanged(auth, (user) => {
+        setUser(user);
+        if (user) {
+          setupPresence(user.uid);
+        }
+        setLoading(false);
+      });
+      return unsubscribe;
+    };
+    
+    const unsubscribePromise = initializeAuth();
+
+    return () => {
+      unsubscribePromise.then(unsubscribe => unsubscribe && unsubscribe());
+    };
   }, []);
 
   const setupPresence = (uid: string) => {
@@ -111,6 +131,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if(userCredential.user) {
         await createUserDocument(userCredential.user, name);
     }
+    // Log out the user immediately after signup so they have to manually log in
+    await signOut(auth);
     return userCredential;
   };
 

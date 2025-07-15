@@ -22,12 +22,6 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
-  useEffect(() => {
-    if (!authLoading && user) {
-      router.push("/chat");
-    }
-  }, [user, authLoading, router]);
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -69,7 +63,7 @@ export default function LoginPage() {
     }
   }
 
-  if (authLoading || user) {
+  if (authLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
