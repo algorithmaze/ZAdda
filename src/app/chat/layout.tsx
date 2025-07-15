@@ -26,6 +26,7 @@ export default function ChatLayout({
   const [loggedInUser, setLoggedInUser] = useState<User | null>(null);
   const [dataLoading, setDataLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("chats");
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -40,7 +41,6 @@ export default function ChatLayout({
         if (doc.exists()) {
           setLoggedInUser({ id: doc.id, ...doc.data() } as User);
         } else {
-          // User doc might not be created yet, handle gracefully
           console.log("User document not found, might be a new user.");
         }
       });
@@ -61,6 +61,14 @@ export default function ChatLayout({
         }));
         
         setChats(chatsData);
+
+        if (!initialLoadComplete) {
+            if (chatsData.length === 0) {
+                setActiveTab("friends");
+            }
+            setInitialLoadComplete(true);
+        }
+
         if (dataLoading) setDataLoading(false);
       }, (error) => {
         console.error("Error fetching chats: ", error);
@@ -81,14 +89,13 @@ export default function ChatLayout({
     } else if (!authLoading) {
       setDataLoading(false);
     }
-  }, [user, authLoading, dataLoading]);
+  }, [user, authLoading, dataLoading, initialLoadComplete]);
 
   useEffect(() => {
-    // This effect handles redirection after the initial loading is done.
-    if (!authLoading && !dataLoading && !user) {
+    if (!authLoading && !user) {
       router.push("/");
     }
-  }, [authLoading, dataLoading, user, router]);
+  }, [authLoading, user, router]);
   
   const renderContent = () => {
     switch (activeTab) {
