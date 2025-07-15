@@ -36,17 +36,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const router = useRouter();
 
   useEffect(() => {
-    // We want auth state to persist across sessions.
-    // If you want to log out on browser close, use browserSessionPersistence.
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
-      if (user) {
-        setupPresence(user.uid);
-      }
+    // We want auth state to persist only for the current session.
+    setPersistence(auth, browserSessionPersistence).then(() => {
+      const unsubscribe = onAuthStateChanged(auth, (user) => {
+        setUser(user);
+        if (user) {
+          setupPresence(user.uid);
+        }
+        setLoading(false);
+      });
+      return () => unsubscribe();
+    }).catch((error) => {
+      console.error("Error setting auth persistence: ", error);
       setLoading(false);
     });
-    
-    return () => unsubscribe();
   }, []);
 
   const setupPresence = (uid: string) => {
@@ -125,13 +128,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return userRef;
   };
 
-  const login = (email: string, pass: string) => {
-    return signInWithEmailAndPassword(auth, email, pass).then(async (userCredential) => {
-        if (userCredential.user) {
-            await createUserDocument(userCredential.user);
-        }
-        return userCredential;
-    });
+  const login = async (email: string, pass: string) => {
+    const userCredential = await signInWithEmailAndPassword(auth, email, pass);
+    if (userCredential.user) {
+        await createUserDocument(userCredential.user);
+    }
+    return userCredential;
   };
 
   const signup = async (email: string, pass: string, name: string) => {

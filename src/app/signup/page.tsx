@@ -24,8 +24,10 @@ export default function SignupPage() {
   const [googleLoading, setGoogleLoading] = useState(false);
 
   useEffect(() => {
+    // This effect can be used for other side-effects on auth state change if needed,
+    // but redirection is now handled in the signup functions.
     if (!authLoading && user) {
-      router.push("/chat");
+      // Intentionally left blank to prevent auto-redirect.
     }
   }, [authLoading, user, router]);
 
@@ -34,7 +36,7 @@ export default function SignupPage() {
     setLoading(true);
     try {
       await signup(email, password, name);
-      // The useEffect will handle redirection after user state is updated
+      router.push("/chat");
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -50,7 +52,7 @@ export default function SignupPage() {
     setGoogleLoading(true);
     try {
       await loginWithGoogle();
-      // The useEffect will handle redirection after user state is updated
+      router.push("/chat");
     } catch (error: any) {
        toast({
         variant: "destructive",
@@ -62,7 +64,7 @@ export default function SignupPage() {
     }
   }
 
-  if (authLoading || user) {
+  if (authLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />

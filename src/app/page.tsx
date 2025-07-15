@@ -23,8 +23,11 @@ export default function LoginPage() {
   const [googleLoading, setGoogleLoading] = useState(false);
 
   useEffect(() => {
+    // This effect can be used for other side-effects on auth state change if needed,
+    // but redirection is now handled in the login functions.
     if (!authLoading && user) {
-      router.push("/chat");
+      // Intentionally left blank to prevent auto-redirect.
+      // User must click to login.
     }
   }, [authLoading, user, router]);
 
@@ -62,7 +65,7 @@ export default function LoginPage() {
     }
   }
 
-  if (authLoading || user) {
+  if (authLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
