@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
@@ -34,6 +35,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     const initializeAuth = async () => {
+      // Use session persistence to ensure user logs out when tab is closed
       await setPersistence(auth, browserSessionPersistence);
       const unsubscribe = onAuthStateChanged(auth, (user) => {
         setUser(user);
@@ -81,7 +83,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (snap.val() === true) {
             const disconnectRef = onDisconnect(userStatusDatabaseRef);
             disconnectRef.set(isOfflineForRTDB).then(() => {
-                 updateDoc(userStatusFirestoreRef, isOfflineForFirestore);
+                 updateDoc(userStatusFirestoreRef, isOfflineForFirestore).catch(() => {});
             });
             
             set(userStatusDatabaseRef, isOnlineForRTDB);
@@ -101,7 +103,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       try {
         // First, update the auth user's profile
-        if (name) {
+        if (name && firebaseUser.displayName !== name) {
           await updateProfile(firebaseUser, { displayName: name });
         }
         
@@ -120,6 +122,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw error;
       }
     }
+    return userRef;
   };
 
   const login = (email: string, pass: string) => {
@@ -131,8 +134,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if(userCredential.user) {
         await createUserDocument(userCredential.user, name);
     }
-    // Log out the user immediately after signup so they have to manually log in
-    await signOut(auth);
     return userCredential;
   };
 
