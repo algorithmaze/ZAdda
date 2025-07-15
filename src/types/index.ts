@@ -1,3 +1,4 @@
+
 import type { Timestamp } from "firebase/firestore";
 
 export type User = {
@@ -28,4 +29,12 @@ export type Chat = {
   otherUser?: User; // This will be populated client-side
   messages: Message[];
   unreadCount: number;
+};
+
+export type FriendRequest = {
+  id: string;
+  fromUserId: string;
+  toUserId: string;
+  status: 'pending' | 'accepted' | 'declined';
+  createdAt: Timestamp;
 };

@@ -75,7 +75,7 @@ export default function ChatLayout({
         if (dataLoading) setDataLoading(false);
       });
       
-      const usersQuery = query(collection(db, "users"), where("id", "!=", user.uid));
+      const usersQuery = query(collection(db, "users"));
       const unsubscribeUsers = onSnapshot(usersQuery, (snapshot) => {
         const usersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User));
         setUsers(usersData);
@@ -91,18 +91,12 @@ export default function ChatLayout({
     }
   }, [user, authLoading, initialLoadComplete]);
 
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.push("/");
-    }
-  }, [authLoading, user, router]);
-  
   const renderContent = () => {
     switch (activeTab) {
       case "chats":
         return <ContactList chats={chats} />;
       case "friends":
-        return <FriendList users={users} />;
+        return <FriendList allUsers={users} currentUser={loggedInUser!} />;
       case "calls":
         return (
           <div className="flex-1 flex flex-col items-center justify-center text-center p-4">
@@ -129,11 +123,7 @@ export default function ChatLayout({
   }
   
   if (!user) {
-     return (
-        <div className="flex h-screen w-full items-center justify-center">
-            <p>Redirecting to login...</p>
-        </div>
-     );
+     return null; // The redirect is handled by the first useEffect
   }
 
   return (
