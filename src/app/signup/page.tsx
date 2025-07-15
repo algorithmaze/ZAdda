@@ -29,7 +29,15 @@ export default function SignupPage() {
       await signup(email, password, name);
       toast({
         title: "Account Created!",
-        description: "You have successfully signed up.",
+        description: (
+          <p>
+            You have successfully signed up. Please{" "}
+            <Link href="/" className="font-bold underline">
+              Sign In
+            </Link>
+            .
+          </p>
+        ),
       });
       // Intentionally not redirecting to allow user to navigate manually
     } catch (error: any) {
