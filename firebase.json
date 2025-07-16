@@ -10,5 +10,8 @@
     "source": "functions",
     "runtime": "nodejs18",
     "codebase": "default"
+  },
+  "storage": {
+    "rules": "storage.rules"
   }
 }

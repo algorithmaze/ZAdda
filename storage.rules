@@ -1,0 +1,14 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Allow reads and writes only for authenticated users.
+    // Files are stored under a path corresponding to the user's ID.
+    // This rule allows a user to write to their own folder and read from any folder.
+    // You might want to restrict read access further based on your app's needs.
+    match /{userId}/{allPaths=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}
