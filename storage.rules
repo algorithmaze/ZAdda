@@ -2,11 +2,18 @@ rules_version = '2';
 
 service firebase.storage {
   match /b/{bucket}/o {
-    // Only allow authenticated users to read and write to storage.
-    // For production, you might want more granular rules, like checking file size,
-    // type, or tying file access to specific chat rooms.
-    match /{allPaths=**} {
-      allow read, write: if request.auth != null;
+    
+    // Match any file path in the 'chats' directory.
+    match /chats/{chatId}/{allPaths=**} {
+    
+      // Helper function to check if the requesting user is a participant of the chat.
+      function isChatParticipant(chatId) {
+        return get(/databases/$(database)/documents/chats/$(chatId)).data.userIds.hasAny([request.auth.uid]);
+      }
+
+      // Allow reads and writes only for authenticated users who are part of the chat.
+      // This prevents users from accessing or uploading files to chats they don't belong to.
+      allow read, write: if request.auth != null && isChatParticipant(chatId);
     }
   }
 }

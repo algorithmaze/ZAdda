@@ -6,13 +6,13 @@ import { getDatabase } from "firebase/database";
 import { getFunctions } from "firebase/functions";
 
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-  databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,
+  apiKey: "AIzaSyBBosMTOA6ax6DQS67kSfrjImYTzoDSm1g", // You'll get this by adding a Web App in your Firebase project settings!
+  authDomain: "zadda-ba5a0.firebaseapp.com",
+  projectId: "zadda-ba5a0",
+  storageBucket: "zadda-ba5a0.firebasestorage.app", // This is derived from your project ID
+  messagingSenderId: "1037242909778", // This is your Project Number
+  appId: "YOUR_WEB_APP_APP_ID", // You'll get this by adding a Web App in your Firebase project settings!
+  databaseURL: "https://zadda-ba5a0-default-rtdb.asia-southeast1.firebasedatabase.app",
 };
 
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
