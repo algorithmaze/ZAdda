@@ -11,12 +11,10 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  // Adding experimental config to resolve cross-origin warnings in development.
-  experimental: {
-    allowedDevOrigins: [
-        "https://*.cluster-htdgsbmflbdmov5xrjithceibm.cloudworkstations.dev"
-    ]
-  }
+  // Adding config to resolve cross-origin warnings in development.
+  allowedDevOrigins: [
+      "https://*.cluster-htdgsbmflbdmov5xrjithceibm.cloudworkstations.dev"
+  ]
 };
 
 export default nextConfig;
