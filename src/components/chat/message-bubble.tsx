@@ -35,7 +35,6 @@ export function MessageBubble({ message, isSentByCurrentUser, className, ...prop
               width={300}
               height={200}
               className="rounded-lg object-cover"
-              data-ai-hint={message['data-ai-hint']}
             />
             {message.text && <p className="mt-2 text-sm p-2">{message.text}</p>}
           </div>
