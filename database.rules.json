@@ -1,0 +1,21 @@
+{
+  "rules": {
+    "status": {
+      "$uid": {
+        ".read": "auth != null",
+        ".write": "auth != null && auth.uid === $uid",
+        "state": {
+          ".validate": "newData.isString() && (newData.val() === 'online' || newData.val() === 'offline')"
+        },
+        "last_changed": {
+          ".validate": "newData.val() === now"
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
+    },
+    ".read": false,
+    ".write": false
+  }
+}
