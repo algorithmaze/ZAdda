@@ -1,38 +1,40 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-  
-    // Users Collection Rules:
-    // - Any authenticated user can read any user's profile (for searching, etc.).
-    // - A user can only create or update their OWN profile document.
-    // - Deleting profiles from the client is disallowed.
+
+    // Users Collection
+    // - Any authenticated user can read any user's profile.
+    // - A user can only create or update their own document.
     match /users/{userId} {
       allow read: if request.auth != null;
       allow create, update: if request.auth.uid == userId;
     }
 
-    // Friends Subcollection Rules:
-    // - This collection is managed by the `acceptFriendRequest` Cloud Function.
-    // - Client-side writes are disallowed to enforce backend logic.
-    // - A user can only read their OWN friends list.
+    // Friends Subcollection
+    // - A user can only manage their own friends list.
+    // - Writes are blocked to force creation via the `acceptFriendRequest` cloud function.
     match /users/{userId}/friends/{friendId} {
-        allow read: if request.auth.uid == userId;
-        allow write: if false; // Disallow direct client writes
+      allow read, delete: if request.auth.uid == userId;
+      allow write: if false;
     }
-    
-    // Friend Requests Collection Rules:
-    // - A user can only create a request where they are the sender.
-    // - A user can only read a request if they are the sender or receiver.
-    // - A user can only update/delete a request if they are the sender or receiver.
+
+    // Friend Requests Collection
+    // - Users can create requests if the 'fromUserId' is their own.
+    // - Only the sender or receiver can read the request.
+    // - Only the receiver can update the status (to accept/decline).
+    // - Only the sender can delete a pending request (cancel).
     match /friendRequests/{requestId} {
-      allow read, update, delete: if request.auth != null && (request.auth.uid == resource.data.fromUserId || request.auth.uid == resource.data.toUserId);
-      allow create: if request.auth != null && request.auth.uid == request.resource.data.fromUserId;
+      allow create: if request.auth.uid == request.resource.data.fromUserId;
+      allow read: if request.auth.uid == resource.data.fromUserId || request.auth.uid == resource.data.toUserId;
+      allow update: if request.auth.uid == resource.data.toUserId;
+      allow delete: if request.auth.uid == resource.data.fromUserId;
     }
     
-    // Chats Collection Rules:
-    // - A user can only read or write to a chat if their UID is in the `userIds` array.
+    // Chats Collection
+    // - Users can only read or write to chats they are a member of.
     match /chats/{chatId} {
-      allow read, write: if request.auth != null && request.auth.uid in resource.data.userIds;
+      allow read, write: if request.auth.uid in resource.data.userIds;
     }
   }
 }

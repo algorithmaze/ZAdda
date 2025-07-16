@@ -1,13 +1,6 @@
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
-  /* config options here */
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   images: {
     remotePatterns: [
       {
@@ -18,6 +11,12 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Adding experimental config to resolve cross-origin warnings in development.
+  experimental: {
+    allowedDevOrigins: [
+        "https://*.cluster-htdgsbmflbdmov5xrjithceibm.cloudworkstations.dev"
+    ]
+  }
 };
 
 export default nextConfig;
