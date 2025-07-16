@@ -1,7 +1,8 @@
 import { cn } from "@/lib/utils";
 import type { Message } from "@/types";
-import { File, Image as ImageIcon, Download } from "lucide-react";
+import { File, Image as ImageIcon, Download, Loader2 } from "lucide-react";
 import Image from "next/image";
+import { Button } from "../ui/button";
 
 interface MessageBubbleProps extends React.HTMLAttributes<HTMLDivElement> {
   message: Message;
@@ -15,10 +16,19 @@ export function MessageBubble({ message, isSentByCurrentUser, className, ...prop
     : "bg-muted";
 
   const renderMessageContent = () => {
+    if (message.uploading) {
+       return (
+        <div className="p-3 flex items-center gap-2">
+            <Loader2 className="w-5 h-5 animate-spin" />
+            <span>Uploading...</span>
+        </div>
+       )
+    }
+
     switch (message.type) {
       case 'image':
         return (
-          <div className="p-2">
+          <div className="p-1">
             <Image
               src={message.fileUrl || ''}
               alt="Shared image"
@@ -27,7 +37,7 @@ export function MessageBubble({ message, isSentByCurrentUser, className, ...prop
               className="rounded-lg object-cover"
               data-ai-hint={message['data-ai-hint']}
             />
-            {message.text && <p className="mt-2 text-sm">{message.text}</p>}
+            {message.text && <p className="mt-2 text-sm p-2">{message.text}</p>}
           </div>
         );
       case 'file':
@@ -36,11 +46,14 @@ export function MessageBubble({ message, isSentByCurrentUser, className, ...prop
              <File className="w-8 h-8 flex-shrink-0" />
              <div className="flex-1 overflow-hidden">
                 <p className="font-medium truncate">{message.fileName}</p>
-                <p className="text-xs">{message.text}</p>
+                {message.text && <p className="text-xs">{message.text}</p>}
              </div>
-             <a href={message.fileUrl} download className="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10">
-                <Download className="w-5 h-5"/>
-             </a>
+             <Button asChild variant="ghost" size="icon" className="rounded-full hover:bg-black/10 dark:hover:bg-white/10">
+                <a href={message.fileUrl} download={message.fileName}>
+                    <Download className="w-5 h-5"/>
+                    <span className="sr-only">Download</span>
+                </a>
+             </Button>
           </div>
         )
       case 'text':

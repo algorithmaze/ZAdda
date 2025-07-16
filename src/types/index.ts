@@ -20,6 +20,7 @@ export type Message = {
   fileUrl?: string;
   fileName?: string;
   'data-ai-hint'?: string;
+  uploading?: boolean;
 };
 
 export type Chat = {
